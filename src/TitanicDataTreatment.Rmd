@@ -1,0 +1,149 @@
+---
+title: "PRA2"
+output: html_document
+date: '2022-05-16'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Instalamos y cargamos las librerías.
+```{r warning=FALSE, message=FALSE}
+# https://cran.r-project.org/web/packages/ggplot2/index.html
+if (!require('ggplot2')) install.packages('ggplot2'); library('ggplot2')
+# https://cran.r-project.org/web/packages/dplyr/index.html
+if (!require('dplyr')) install.packages('dplyr'); library('dplyr')
+```
+
+
+## Ejercicio 1
+
+Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende
+responder?
+
+Cargamos el dataset.
+```{r}
+titanic <- read.csv('data/train.csv',stringsAsFactors = FALSE)
+```
+
+
+Confirmamos que el dataset se ha cargado correctamente:
+```{r}
+head(titanic)
+```
+
+
+Descripción del dataset:
+```{r}
+str(titanic)
+```
+
+Observamos que el conjunto de datos consta de 891 observaciones y 12 variables que describen la tripulación del Titanic.
+
+**PassengerId**
+    Número identificador del pasajero (Integer).
+    
+**Survived**
+    Variable que especifica si un pasajero ha sobrevivido. 0 = No, 1 = Si (Integer).
+    
+**Pclass**
+    Clase socio economica del pasajero. 1 = Clase Alta, 2 = Clase Media, 3 = Clase baja (Integer).
+    
+**Name**
+    Nombre del pasajero (String).
+    
+**Sex**
+    Sexo del pasajero (String).
+    
+**Age**
+    Edad del pasajero. Para pasajeros de menos de un año, la edad esta fraccionada. Si la edad esta estimada, su formato es xx.5 (Numeric).
+
+**SibSp**
+    Número de familiares, hermanos o esposos, a abordo (Integer).
+    
+**Parch**
+    Número de familiares, padres o hijos, a bordo (Ingeger).
+    
+**Ticket**
+    Número del billete (String).
+    
+**Fare**
+    Precio del billete (Numeric)
+    
+**Cabin**
+    Número de cabina (String).
+
+**Embarked**
+    Puerto en el que embarco el pasajero. C = Cherbourg, Q = Queenstown, S = Southampton (String).
+
+
+#TODO: ¿Por qué es importante y qué pregunta/problema pretende responder?
+
+For each passenger in the test set, use the model you trained to predict whether or not they survived the sinking of the Titanic.
+
+## Ejercicio 2
+
+Integración y selección de los datos de interés a analizar. Puede ser el resultado de
+adicionar diferentes datasets o una subselección útil de los datos originales, en base al
+objetivo que se quiera conseguir.
+
+
+## Ejercicio 3
+
+Limpieza de los datos.
+
+### 3.1 Valores vacios
+
+¿Los datos contienen ceros o elementos vacíos? Gestiona cada uno de estos
+casos.
+
+
+### 3.2 Valores extremos
+
+Identifica y gestiona los valores extremos.
+
+
+## Ejercicio 4
+
+Análisis de los datos.
+
+
+### 4.1 Elección de los datos a analizar
+
+Selección de los grupos de datos que se quieren analizar/comparar (p. e., si se
+van a comparar grupos de datos, ¿cuáles son estos grupos y qué tipo de análisis
+se van a aplicar?)
+
+
+### 4.2  Normalidad y Homogeneidad
+
+Comprobación de la normalidad y homogeneidad de la varianza.
+
+
+### 4.3 Análisis
+
+Aplicación de pruebas estadísticas para comparar los grupos de datos. En función
+de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis,
+correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis
+diferentes
+
+
+## Ejercicio 5
+
+Representación de los resultados a partir de tablas y gráficas. Este apartado se puede
+responder a lo largo de la práctica, sin necesidad de concentrar todas las
+representaciones en este punto de la práctica.
+
+
+
+## Ejercicio 6
+
+
+Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las
+conclusiones? ¿Los resultados permiten responder al problema?
+
+
+
+## Referencias
