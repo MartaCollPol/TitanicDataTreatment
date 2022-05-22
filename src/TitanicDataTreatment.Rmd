@@ -70,7 +70,7 @@ Observamos que el conjunto de datos consta de 891 observaciones y 12 variables q
     Número del billete (String).
     
 **Fare**
-    Precio del billete (Numeric)
+    Precio del billete (Numeric).
     
 **Cabin**
     Número de cabina (String).
@@ -114,8 +114,7 @@ Limpieza de los datos.
 
 ### 3.1 Valores vacios
 
-¿Los datos contienen ceros o elementos vacíos? Gestiona cada uno de estos
-casos.
+¿Los datos contienen ceros o elementos vacíos? Gestiona cada uno de estos casos.
 
 
 Estadísticas de valores vacíos.
@@ -198,22 +197,170 @@ Análisis de los datos.
 
 ### 4.1 Elección de los datos a analizar
 
-Selección de los grupos de datos que se quieren analizar/comparar (p. e., si se
-van a comparar grupos de datos, ¿cuáles son estos grupos y qué tipo de análisis
-se van a aplicar?)
+Esta factorización se podría incluir antes.
+```{r}
+titanic$Survived <- factor(titanic$Survived)
+titanic$Pclass <- factor(titanic$Pclass)
+titanic$PassengerId <- factor(titanic$PassengerId)
+```
+
+Se seleccionan los siguientes grupos de datos para su posterior análisis.
+
+En primer lugar se seleccionan dos subsets diferenciando entre si alguien sobrevive o no.
+
+```{r}
+passengers.survive <- subset(titanic, Survived == 1)
+passengers.not.survive <- subset(titanic, Survived == 0)
+```
+
+
+A continuación, se separa el dataset por las clases
+```{r}
+passengers.high.class <- subset(titanic, Pclass == 1)
+passengers.med.class <- subset(titanic, Pclass == 2)
+passengers.low.class <- subset(titanic, Pclass == 3)
+```
+
+```{r}
+men <- subset(titanic, Sex == "male")
+women <- subset(titanic, Sex == "female")
+```
 
 
 ### 4.2  Normalidad y Homogeneidad
 
 Comprobación de la normalidad y homogeneidad de la varianza.
 
+```{r}
+par(mfrow=c(1,2))
+for (i in 1:ncol(titanic)) {
+  if (is.integer(titanic[,i]) | is.numeric(titanic[,i])) {
+    qqnorm(titanic[,i],main = paste("Normal Q-Q Plot for ",colnames(titanic)[i]))
+    qqline(titanic[,i],col="red")
+    hist(titanic[,i], main=paste("Histogram for ", colnames(titanic)[i]), xlab=colnames(titanic)[i], freq = FALSE)
+    print(shapiro.test(titanic[,i]))
+  }
+}
+```
+
 
 ### 4.3 Análisis
 
-Aplicación de pruebas estadísticas para comparar los grupos de datos. En función
-de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis,
-correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis
-diferentes
+Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
+
+En primer lugar, se utiliza un test Chi-cuadrado de Pearson para comprobar si existe relación entre las variables categóricas **Survive**, **Sex** y **Pclass**.
+
+```{r}
+with(titanic, chisq.test(Survived, Sex))
+```
+
+```{r}
+with(titanic, chisq.test(Survived, Pclass))
+```
+
+Como en ambos casos el p-valor es menor que el nivel de significancia, se entiende que sí que existe relación.
+
+Para estudiar si existe relación entre la variable **Age** y la variable **Survived**, se crea un modelo de regresión logística.
+
+```{r}
+model <- glm(Survived ~ Age, family = binomial(link=logit), data=titanic)
+cat("The p-value is", 1-pchisq(sum(residuals(model,type="pearson")^2),1))
+```
+
+Existe relción ya que el p-valor es menor que el nivel de significancia.
+
+A continuación, se calculará el Odds-Ratio de la variable **Survived** para cada una de las variables categóricas. El OR es un número que permite conocer cómo varía la probabilidad de que la variable dependiente adquiera un valor en función del valor que adquiera la variable independiente. Para calcularlo se crea una función.
+
+Se calcularán los OR de sobrevivir frente a no sobrevivir.
+
+```{r}
+# Se muestra la tabla de frecuencia
+print(table(titanic$Survived, titanic$Pclass), rownames(c("Not survived", "Survived")))
+
+# Se calculan los diferentes Odds-Ratios
+a <- as.data.frame(table(titanic$Survived, titanic$Pclass))
+odds.high.class <- a[2,]$Freq  / a[1,]$Freq
+cat("\nThe odds for the high class is ", odds.high.class, "\n")
+odds.medium.class <- a[4,]$Freq  / a[3,]$Freq
+cat("The odds for the medium class is ", odds.medium.class, "\n")
+odds.low.class <- a[6,]$Freq  / a[5,]$Freq
+cat("The odds for the low class is ", odds.low.class, "\n\n")
+
+cat("The OR between the high class and the low class was", odds.high.class / odds.low.class, "\n")
+cat("The OR between the medium class and the low class was", odds.medium.class / odds.low.class, "\n")
+cat("The OR between the high class and the medium class was", odds.high.class / odds.medium.class, "\n")
+```
+
+Analizándo los resultados, una persona de clase alta tenía 5,19 veces más probabilidades de sobrevivir que una persona de clase baja.
+
+Una persona de clase media tenía casi el triple de probabilidades de sobrevivir que una persona de clase baja.
+
+Una persona de clase alta tenía casi el doble de probabilidades de sobrevivir que una persona de clase media.
+
+A continuación se calcularán los OR de la variable **Sex**.
+
+```{r}
+# Se muestra la tabla de frecuencia
+print(table(titanic$Survived, titanic$Sex), rownames(c("Not survived", "Survived")))
+
+# Se calculan los diferentes Odds-Ratios
+a <- as.data.frame(table(titanic$Survived, titanic$Sex))
+odds.female <- a[2,]$Freq  / a[1,]$Freq
+cat("\nThe odds for the female is ", odds.female, "\n")
+odds.male <- a[4,]$Freq  / a[3,]$Freq
+cat("The odds for the male is ", odds.male, "\n")
+
+cat("The OR between the female and the male was", odds.female / odds.male, "\n")
+```
+
+Una mujer tenía 12,5 veces más probabilidades de sobrevivir que un hombre.
+
+
+```{r}
+model.age <- glm(Survived ~ Age, family = binomial(link=logit), data=titanic)
+summary(model.age)
+```
+
+Se aprecia cómo el p-valor de la variable edad es mayor que 
+
+
+### Comparación de las edades en los sexos
+
+Nos preguntamos si la media de edad de hombres y mujeres es la misma.
+
+#### Análisis visual
+
+```{r}
+ggplot(data=women, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Women's age distribution") + ggtitle("Women's age")
+```
+
+```{r}
+shapiro.test(women$Age)
+```
+
+
+```{r}
+ggplot(data=men, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Men's age distribution") + ggtitle("Men's age")
+```
+
+Aunque las muestras no presentan distribuciones normales, aplicando el Teorema del Límite Central se puede concluir que las medias muestrales siguen una distribución normal
+
+Hipótesis nula: $H_{0}: \mu_W=\mu_M$
+
+Hipótesis alternativa: $H_{1}: \mu_W\neq\mu_M$
+
+### 4.4 Justificación del test a aplicar
+
+Es un test paramétrico ya que los datos siguen una distribución normal.
+
+El test de contraste que se aplicará en este caso es el de un contrate unilateral de dos muestras independientes sobre la media con varianzas desconocidas. Para saber si las varianzas son diferentes, se debe realizar un test de homoscedasticidad.
+
+```{r}
+var.test(women$Age, men$Age)
+```
+
+
+
 
 
 ## Ejercicio 5
