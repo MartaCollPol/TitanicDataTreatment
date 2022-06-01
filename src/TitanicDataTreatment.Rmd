@@ -15,6 +15,10 @@ Instalamos y cargamos las librerías.
 if (!require('ggplot2')) install.packages('ggplot2'); library('ggplot2')
 # https://cran.r-project.org/web/packages/dplyr/index.html
 if (!require('dplyr')) install.packages('dplyr'); library('dplyr')
+if (!require('caret')) install.packages('caret'); library('caret')
+if (!require('normtest')) install.packages('normtest'); library('normtest')
+if (!require('car')) install.packages('car'); library('car')
+if (!require('gridExtra')) install.packages('gridExtra'); library('gridExtra')
 ```
 
 
@@ -22,6 +26,8 @@ if (!require('dplyr')) install.packages('dplyr'); library('dplyr')
 
 Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende
 responder?
+
+### 1.1 Carga de los datos
 
 Cargamos el dataset.
 ```{r}
@@ -34,6 +40,7 @@ Confirmamos que el dataset se ha cargado correctamente:
 head(df)
 ```
 
+### 1.2 Descripción del dataset
 
 Descripción del dataset:
 ```{r}
@@ -49,7 +56,7 @@ Observamos que el conjunto de datos consta de 891 observaciones y 12 variables q
     Variable que especifica si un pasajero ha sobrevivido. 0 = No, 1 = Si (Integer).
     
 **Pclass**
-    Clase socio economica del pasajero. 1 = Clase Alta, 2 = Clase Media, 3 = Clase baja (Integer).
+    Clase socio económica del pasajero. 1 = Clase Alta, 2 = Clase Media, 3 = Clase baja (Integer).
     
 **Name**
     Nombre del pasajero (String).
@@ -79,15 +86,23 @@ Observamos que el conjunto de datos consta de 891 observaciones y 12 variables q
     Puerto en el que embarco el pasajero. C = Cherbourg, Q = Queenstown, S = Southampton (String).
 
 
-#TODO: Traducir y poner bien la respuesta a ¿Por qué es importante y qué pregunta/problema pretende responder?
+Observamos que muchas de estas variables se presentan como Integers o Strings, cuando realmente nos expresan una categoria. Por ello factorizaremos las variables categoricas.
 
-The sinking of the Titanic is one of the most infamous shipwrecks in history.
+```{r}
+df$Survived <- factor(df$Survived)
+df$Pclass <- factor(df$Pclass)
+df$Sex <- factor(df$Sex)
+df$SibSp <- factor(df$SibSp)
+df$Parch <- factor(df$Parch)
+df$Embarked <- factor(df$Embarked)
+```
 
-On April 15, 1912, during her maiden voyage, the widely considered “unsinkable” RMS Titanic sank after colliding with an iceberg. Unfortunately, there weren’t enough lifeboats for everyone onboard, resulting in the death of 1502 out of 2224 passengers and crew.
 
-While there was some element of luck involved in surviving, it seems some groups of people were more likely to survive than others.
+### 1.3 Motivación del estudio
 
-In this challenge, we ask you to build a predictive model that answers the question: “what sorts of people were more likely to survive?” using passenger data (ie name, age, gender, socio-economic class, etc).
+Cuando el Titanic fue construido, se considero que este era imposible de hundir. Durante su viaje inaugural, el Titanic se hundió tras chocar contra un iceberg y la escasez de barcos salvavidas convirtió el accidente en una gran tragedia que resultó en la muerte de 1502 personas del conjunto de 2224 pasajeros y tripulación. Claramente la suerte tuvo un papel importante en determinar quien sobrevivió y quien no, pero se puede intuir que ciertos grupos de personas tuvieron más probabilidades de hacerlo que otros. 
+
+En este estudio nos centraremos en responder a la pregunta "Que grupos de personas tuvieron más probabilidades de sobrevivir el accidente?". O dicho de otra forma, "¿Cuales fueron los factores de peso que influyeron en que los pasajeros tuvieran mayor probabilidad de sobrevivir?".
 
 
 ## Ejercicio 2
@@ -97,13 +112,13 @@ adicionar diferentes datasets o una subselección útil de los datos originales,
 objetivo que se quiera conseguir.
 
 
-La principal variable a incluir va a ser **Survived**. Esta será nuestra variable objetivo a predecir.
-A continuación querremos seleccionar todas las variables que puedan describir el pasajero, y eliminar las variables irrelevantes. Observando la previa descripción de las variables realizada en el ejercicio 1, rápidamente podemos identificar que las variables **Cabin**, el número de cabina, y **Ticket**, el número del billete, no nos aportan información relevante para describir el pasajero. De mismo modo, la variable **Nombre** tampoco nos aporta información relevante, los pasajeros se identifican de forma única usando la variable **PassengerId**.
+La principal variable a incluir va a ser **Survived**. Esta será nuestra variable objetivo a estudiar ya que queremos determinar que factores tuvieron más peso al aumentar la probabilidad de sobrevivir de los pasajeros.
+A continuación querremos seleccionar todas las variables que puedan describir el pasajero, y eliminar las variables irrelevantes. Observando la previa descripción de las variables realizada en el ejercicio 1, rápidamente podemos identificar que las variables **Cabin**, el número de cabina, y **Ticket**, el número del billete, no nos aportan información relevante para describir el pasajero. De mismo modo, las variables **Nombre** y **PassangerId** que sirven para identificar a los pasajeros, tampoco nos aportan información descriptiva sobre ellos.
 
 Procedemos a descartar las variables irrelevantes.
 
 ```{r}
-irrelevant <- c("Cabin", "Ticket", "Name")
+irrelevant <- c("Cabin", "Ticket", "Name", "PassengerId")
 titanic <- df[ , -which(names(df) %in% irrelevant)]
 ```
 
@@ -135,7 +150,7 @@ titanic$Age[is.na(titanic$Age)] <- mean(titanic$Age, na.rm=T)
 ```
 
 
-Debido a que la variable **Embarked** tiene solo 2 valores vacíos, no vemos la necesidad de crear una categoría nueva "Desconocido" para substituir los valores vacíos, creemos que la mejor estrategia en este caso, es substituir estos valores vacíos por la categoría más repetida, evitando así la perdida de información que supondría eliminar las observaciones. 
+Debido a que la variable **Embarked** tiene solo 2 valores vacíos, no vemos la necesidad de crear una categoría nueva "Desconocido" para substituir los valores vacíos, creemos que la mejor estrategia en este caso, es substituir estos valores vacíos por la categoría más repetida, evitando así la perdida de información que supondría eliminar las observaciones.
 
 ```{r}
 # Determinamos la categoría que se repite con mayor frecuencia
@@ -170,7 +185,7 @@ Observemos las estadísticas básicas del conjunto de datos para identificar pos
 summary(titanic)
 ```
 
-Observamos que los valores minimos y maximos de la variable **Age**, se mantienen dentro de un rango lógico. **SibSp** y **Parch**, tienen un valor máximo alto, pero parece consistente con los estándares de familias de la época. La variable que será necesária analizar con profundidad es **Fare**. Esta variable contiene un valor máximo muy superior al valor medio.
+Observamos que los valores mínimos y máximos de la variable **Age**, se mantienen dentro de un rango lógico. **SibSp** y **Parch**, tienen un valor máximo alto, pero parece consistente con los estándares de familias de la época. La variable que será necesaria analizar con profundidad es **Fare**. Esta variable contiene un valor máximo muy superior al valor medio.
 
 
 Utilizaremos la representación *boxplot* para identificar los *outliers* de **Fare**.
@@ -182,8 +197,16 @@ ggplot(titanic) +
   theme_minimal()
 ```
 
-Con esta representación, podemos identificar claramente un **outiler** correspondiente al valor máximo de 512.33. Optaremos para eliminar esta observación ya que es sospechosa de contener información no verídica.
+Con esta representación, podemos identificar claramente *outilers* correspondientes al valor máximo de 512.33. Optaremos por eliminar estos *outliers* ya que la diferencia respecto a las demás observaciones es tan significativa que sospechamos que tales observaciones contienen información no verídica. Los otros puntos que son detectados como *outliers*, menores a 300, corresponden a los precios pagados por los pasajeros de primera clase. A continuación mostramos algunas de estas observaciones para **Fare** mayor a 100.
 
+```{r}
+head(titanic[titanic$Fare > 150, ])
+```
+
+
+Observamos que efectivamente, esas observaciones corresponden a pasajeros de primera clase.
+
+Eliminamos los *outliers* detectados:
 ```{r}
 titanic <- subset(titanic, titanic$Fare < 500)
 ```
@@ -197,19 +220,20 @@ Análisis de los datos.
 
 ### 4.1 Elección de los datos a analizar
 
-???Esta factorización se podría incluir antes.
-```{r}
-titanic$Survived <- factor(titanic$Survived)
-titanic$Pclass <- factor(titanic$Pclass)
-titanic$PassengerId <- factor(titanic$PassengerId)
-```
+En este análisis pretendemos analizar el peso de las distintas variables del conjunto sobre la variable dependiente **Survived**. En el Ejercicio 2 escogimos el subset del conjunto de datos que consideramos de interés analítico para el estudio. Este consiste de las variables **Survived**, **Pclass**, **Sex**, **Age**, **SibSp**, **Parch**, **Fare** y **Embarked**.
 
-Se seleccionan los siguientes grupos de datos para su posterior análisis.
-
+De las variables de interés para el análisis, seleccionaremos ciertas agrupaciones que nos resultan interesantes de analizar en más profundidad. 
+Estas serán la agrupación por genero, la variable **Sex**, y la agrupación por clase socio económica, la variable **Pclass**.
 
 ```{r}
-men <- subset(titanic, Sex == "male")
-women <- subset(titanic, Sex == "female")
+# Agrupación por género
+titanic.men   <- subset(titanic, Sex == "male")
+titanic.women <- subset(titanic, Sex == "female")
+
+# Agrupación por clase socio económica
+titanic.high  <- subset(titanic, Pclass == "1")
+titanic.mid   <- subset(titanic, Pclass == "2")
+titanic.low   <- subset(titanic, Pclass == "3")
 ```
 
 
@@ -217,23 +241,135 @@ women <- subset(titanic, Sex == "female")
 
 Comprobación de la normalidad y homogeneidad de la varianza.
 
+Analizaremos la normalidad y la homogeniedad de la varianza para las variables continuas **Age** y **Fare**.
+
+
+#### Age:
+
+Análisis visual de normalidad:
 ```{r}
-par(mfrow=c(1,2))
-for (i in 1:ncol(titanic)) {
-  if (is.integer(titanic[,i]) | is.numeric(titanic[,i])) {
-    qqnorm(titanic[,i],main = paste("Normal Q-Q Plot for ",colnames(titanic)[i]))
-    qqline(titanic[,i],col="red")
-    hist(titanic[,i], main=paste("Histogram for ", colnames(titanic)[i]), xlab=colnames(titanic)[i], freq = FALSE)
-    print(shapiro.test(titanic[,i]))
-  }
-}
+qqnorm(titanic$Age,main = "Normal Q-Q Plot para Age")
+qqline(titanic$Age,col = "red")
+
+#[1]
+ggplot(titanic, aes(x = Age)) + 
+  geom_histogram(aes(y = ..density..), bins = 30,
+                 colour = 1, fill = "white") +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  ggtitle("Distribución y densidad de Age")
 ```
 
-TODO: COMENTAR
+Para determinar que puede haber normalidad, deberíamos poder ver como la mayoría de observaciones se alinea encima de la línea roja (indica el comportamiento esperado de una variable normal) para la representación Quantil-Quantil. Este no es el caso observado para la variable **Age**. 
+
+Si nos fijamos en el histograma de la variable con su correspondiente curva de densidad, para que hubiera normalidad, deberíamos observar una curva de densidad simétrica con forma de campana, por lo que podemos determinar que no es una variable normal. Podemos observar de la distribución, que la mayoría de pasajeros eran jóvenes de entre 20 y 30 años. 
+
+
+Análisis por tests de normalidad:
+```{r} 
+#[2]
+## Shapiro test
+shapiro.test(titanic$Age)
+## Jarque Bera test
+jb.norm.test(titanic$Age)
+## Forsini test
+frosini.norm.test(titanic$Age)
+```
+
+Para los tests de normalidad Shapiro-Wilk, Jarque-Bera y Frosini, la hipótesis nula indica normalidad, mientras que la hipótesis alternativa indica que no hay normalidad. Un valor p superior al nivel de significancia ~0.05, nos indicaría que no podemos descartar la hipótesis nula de normalidad. Para todos los test probados, observamos unos valores p muy inferiores al nivel de significancia, que nos indican que no estamos frente a una variable normal.
+
+
+Análisis de homogeniedad de la varianza:
+
+```{r}
+leveneTest(y = titanic$Age, group = titanic$Survived, center = "median")
+```
+
+Para evaluar la homocedasticidad, o la homogeniedad de la varianza, para la variable **Age**, debemos tener en cuenta que, como determinamos previamente, no se trata de una variable normal. Por ello, la elección del test Levene es la más conveniente siendo este menos sensible a que la ausencia de normalidad [3]. 
+
+Hipótesis nula: Ambas varianzas son iguales. 
+Hipótesis alternativa: Las varianzas son distintas entre si.
+
+$$
+\left\{
+\begin{array}{ll}
+H_{0}: &  \mu=\mu_0\\
+H_{1}: & \mu\neq\mu_0
+\end{array}
+\right.
+$$
+Se aplica el test para la variable **Age** y se comparan las varianzas cuando esta variable es agrupada según **Survived**, la variable dependiente que queremos estudiar. Podemos observar de los resultados un valor p igual a 0.0169. Esto nos indica que debemos descartar la hipótesis nula, es decir, el hecho de que ambas varianzas sean iguales, en el caso de optar por un nivel de significancia de 0.01 o 0.001. Si optamos por un nivel de significancia de 0.05 o 0.1, no podemos descartar la hipótesis nula y por lo tanto las varianzas de ambos grupos deben considerarse iguales. 
+
+
+#### Fare
+
+Análisis visual de normalidad:
+```{r}
+qqnorm(titanic$Fare,main = "Normal Q-Q Plot para Fare")
+qqline(titanic$Fare,col = "red")
+
+#[1]
+ggplot(titanic, aes(x = Fare)) + 
+  geom_histogram(aes(y = ..density..), bins = 30,
+                 colour = 1, fill = "white") +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  ggtitle("Distribución y densidad de Fare")
+```
+
+Observamos en el gráfico Normal Q-Q, como la mayoría de observaciones no se alinea encima de la línea roja que indica como debería comportarse una variable normal. Este gráfico nos indica que **Fare** no sigue una distribución normal. 
+
+Al fijarnos en el histograma de la variable con su curva de densidad, vemos como la mayoría de valores se centran entre 0 y 50, con un pico pronunciado entorno a 10, y decaen casi exponencialmente. La curva de densidad no es simétrica ni tiene forma de campana. Determinamos que no se trata de una variable con distribución normal.
+
+
+Análisis por tests de normalidad:
+```{r} 
+#[2]
+## Shapiro test
+shapiro.test(titanic$Fare)
+## Jarque Bera test
+jb.norm.test(titanic$Fare)
+## Forsini test
+frosini.norm.test(titanic$Fare)
+```
+
+Para los tests de normalidad Shapiro-Wilk, Jarque-Bera y Frosini, la hipótesis nula indica normalidad, mientras que la hipotesis alternativa indica que no hay normalidad. En todos ellos nos encontramos un valor p muy pequeño, inferior a todos los limites de significancia comunmente usados, por lo que debemos descartar la hipotesis nula de normalidad.
+
+
+Análisis de homogeniedad de la varianza:
+
+```{r}
+leveneTest(y = titanic$Fare, group = titanic$Survived, center = "median")
+```
+
+Para evaluar la homocedasticidad, o la homogeniedad de la varianza, para la variable **Fare**, elijemos de nuevo el test Levene siendo este menos sensible a que la ausencia de normalidad [3]. 
+
+Hipótesis nula: Ambas varianzas son iguales. 
+Hipótesis alternativa: Las varianzas son distintas entre si.
+
+$$
+\left\{
+\begin{array}{ll}
+H_{0}: &  \mu=\mu_0\\
+H_{1}: & \mu\neq\mu_0
+\end{array}
+\right.
+$$
+
+Observamos que al evaluar las varianzas agrupando la variable **Fare** en función de la variable dependiente **Survived**, estas son claramente diferentes entre ellas. Obtenemos un valor p muy pequeño, inferior a todos los límites de significancia comúnmente usados, y por ello debemos descartar las hipótesis nula. 
+
 
 ### 4.3 Análisis
 
 Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
+
+
+#TODO mostraremos sus distribuciones para poder analizar si el conjunto de datos se encuentra muy desbalanceado, de forma que nos conduzca a conclusiones erróneas. 
+
+
+
+
+
 
 En primer lugar, se utiliza un test Chi-cuadrado de Pearson para comprobar si existe relación entre las variables categóricas **Survive**, **Sex** y **Pclass**.
 
@@ -361,7 +497,7 @@ A continuación se irán añadiendo variables independientes al modelo de regres
 En primer lugar, se divide el dataset en un dataset de train y otro de test para evaluar los modelos. Se selecciona las proporción 1 a 4.
 
 ```{r}
-library(caret)
+
 set.seed(23)
 
 trainIndex=createDataPartition(titanic$Survived, p=0.75)$Resample1
@@ -579,3 +715,12 @@ conclusiones? ¿Los resultados permiten responder al problema?
 
 
 ## Referencias
+
+
+[1] Histogram with density in ggplot2 [fecha de consulta: 30/05/22] Disponible en: https://r-charts.com/distribution/histogram-density-ggplot2/ 
+
+
+[2] Sigüeñas Gonzales, Manuel. Pruebas de Normalidad [fecha de publicación: 28/10/2015] [fecha de consulta: 30/05/22] Disponible en: https://rpubs.com/MSiguenas/122473  
+
+
+[3] Amat Rodrigo, Joaquín. Análisis de la homogeneidad de varianza (homocedasticidad)[fecha de publicación: 01/01/2016] [fecha de consulta: 30/05/22] Disponible en: https://rpubs.com/Joaquin_AR/218466
