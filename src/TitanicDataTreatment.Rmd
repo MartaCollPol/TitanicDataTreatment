@@ -528,16 +528,16 @@ Nos preguntamos si la media de edad de hombres es mayor que la de las mujeres.
 
 #TODO: Agrupar ambas densidades men/wmn en un mismo plot
 ```{r}
-ggplot(data=women, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Women's age distribution") + ggtitle("Women's age")
+ggplot(data=titanic.women, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Women's age distribution") + ggtitle("Women's age")
 ```
 
 ```{r}
-shapiro.test(women$Age)
+shapiro.test(titanic.women$Age)
 ```
 
 
 ```{r}
-ggplot(data=men, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Men's age distribution") + ggtitle("Men's age")
+ggplot(data=titanic.men, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Men's age distribution") + ggtitle("Men's age")
 ```
 
 #TODO: Comentar. ????Aunque las muestras no presentan distribuciones normales, aplicando el Teorema del Límite Central se puede concluir que las medias muestrales siguen una distribución normal
@@ -545,7 +545,7 @@ ggplot(data=men, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Men
 El test de contraste que se aplicará en este caso es el de un contrate unilateral de dos muestras independientes sobre la media con varianzas desconocidas. Para saber si las varianzas son diferentes, se debe realizar un test de homoscedasticidad.
 
 ```{r}
-var.test(women$Age, men$Age)
+var.test(titanic.women$Age, men$Age)
 ```
 
 Como el p-valor es tan alto, no se puede rechazar la hipótesis nula de que las varianzas son diferentes, por lo tanto el test seguirá una distribución *t-student* con $n_1+n_2-2$ grados de libertad.
@@ -563,7 +563,7 @@ Hipótesis alternativa: $H_{1}: \mu_W<\mu_M$
 
 
 ```{r}
-t.test(women$Age, men$Age, alternative = "l", var.equal = TRUE)
+t.test(titanic.women$Age, men$Age, alternative = "l", var.equal = TRUE)
 ```
 
 Como el p-valor es menor que el nivel de significancia, se rechaza la hipótesis nula y se acepta que la media de edad de las mujeres fue menor que la de los hombres.
