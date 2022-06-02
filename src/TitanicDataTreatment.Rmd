@@ -364,34 +364,41 @@ Observamos que al evaluar las varianzas agrupando la variable **Fare** en funci�
 Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
 
 
-#TODO mostraremos sus distribuciones para poder analizar si el conjunto de datos se encuentra muy desbalanceado, de forma que nos conduzca a conclusiones erróneas. 
+#### 4.3.1 Analisis de la relación entre haber sobrevivido, o no, con las variables categóricas
 
-
-
-
-
-
-En primer lugar, se utiliza un test Chi-cuadrado de Pearson para comprobar si existe relación entre las variables categóricas **Survive**, **Sex** y **Pclass**.
+Primeramente analizaremos de forma visual si pueden haber correlaciones entre las variables categóricas del conjunto **Sex**, **Pclass**, **SibSp**, **Parch** y **Embarked** con  **Survive**, la variable que nos indica si los pasajeros sobrevivieron al accidente. Para ello utilizaremos un gráfico de frecuencias, que nos permitir al mismo tiempo conocer mejor como se distribuyen estas variables.
 
 ```{r}
-with(titanic, chisq.test(Survived, Sex))
+# Histogramas
+d.Sex <- ggplot(data = titanic, aes(x=Sex, fill=Survived))+geom_bar()+
+              ggtitle("Sobrevivir en función del género") + 
+              theme(plot.title = element_text(size = 10))
+
+d.Pclass <- ggplot(data = titanic, aes(x=Pclass, fill=Survived))+geom_bar()+
+              ggtitle("Sobrevivir en función de la classe socio económica") +
+              theme(plot.title = element_text(size = 10)) 
+
+d.SibSp <- ggplot(data = titanic, aes(x=SibSp, fill=Survived))+geom_bar()+
+              ggtitle("Sobrevivir en función de tener a
+                      bordo hermanos o esposos/as") +
+              theme(plot.title = element_text(size = 10))
+
+d.Parch <- ggplot(data = titanic, aes(x=Parch, fill=Survived))+geom_bar()+
+              ggtitle("Sobrevivir en función de tener a bordo padres o hijos") +
+              theme(plot.title = element_text(size = 10))
+
+d.Embarked <- ggplot(data = titanic, aes(x=Embarked, fill=Survived))+geom_bar()+
+                ggtitle("Sobrevivir en función del puerto de embarque") +
+                theme(plot.title = element_text(size = 10))
+
+grid.arrange(d.Sex, d.Pclass, d.SibSp, d.Embarked, d.Parch,
+             ncol = 2, nrow = 3)
 ```
 
-```{r}
-with(titanic, chisq.test(Survived, Pclass))
-```
+#TODO : Comentar el gráfico
 
-Como en ambos casos el p-valor es menor que el nivel de significancia, se entiende que sí que existe relación.
 
-Para estudiar si existe relación entre la variable **Age** y la variable **Survived**, se crea un modelo de regresión logística.
-
-```{r}
-model <- glm(Survived ~ Age, family = binomial(link=logit), data=titanic)
-cat("The p-value is", 1-pchisq(sum(residuals(model,type="pearson")^2),1))
-```
-
-Existe relción ya que el p-valor es menor que el nivel de significancia.
-
+#TODO: Introducir bien el Odds ratio y 
 A continuación, se calculará el Odds-Ratio de la variable **Survived** para cada una de las variables categóricas. El OR es un número que permite conocer cómo varía la probabilidad de que la variable dependiente adquiera un valor en función del valor que adquiera la variable independiente. Para calcularlo se crea una función.
 
 Se calcularán los OR de sobrevivir frente a no sobrevivir.
@@ -414,7 +421,7 @@ cat("The OR between the medium class and the low class was", odds.medium.class /
 cat("The OR between the high class and the medium class was", odds.high.class / odds.medium.class, "\n")
 ```
 
-Analizándo los resultados, una persona de clase alta tenía 5,19 veces más probabilidades de sobrevivir que una persona de clase baja.
+Analizando los resultados, una persona de clase alta tenía 5,19 veces más probabilidades de sobrevivir que una persona de clase baja.
 
 Una persona de clase media tenía casi el triple de probabilidades de sobrevivir que una persona de clase baja.
 
@@ -439,20 +446,87 @@ cat("The OR between the female and the male was", odds.female / odds.male, "\n")
 Una mujer tenía 12,5 veces más probabilidades de sobrevivir que un hombre.
 
 
+
+
+A continuación, para confirmar si hay relación, utilizaremos el test Chi-cuadrado de Pearson [4] relación entre las variables categóricas **Sex**, **Pclass**, **SibSp**, **Parch** y **Embarked** con la variable **Survive** que nos indica si los pasajeros sobrevivieron o no al accidente.
+
+Para el test Chi-cuadrado, las hipótesis son las siguientes:
+
+Hipótesis nula: No existe relación entre ambas variables.
+Hipótesis alternativa: Existe relación entre las variables. 
+
+Un valor p inferior a los valores comunes de significancia ~0.05, nos indica que podemos descartar la hipótesis nula, por lo tanto, existe relación, de lo contrario nos indicaría que no hay relación entre ambas variables.
+
+**Sex**:
 ```{r}
-model.age <- glm(Survived ~ Age, family = binomial(link=logit), data=titanic)
-summary(model.age)
+with(titanic, chisq.test(Survived, Sex))
 ```
 
-Se aprecia cómo el p-valor de la variable edad es mayor que 
+Hay relación.
 
 
-### Comparación de las edades en los sexos
+**Pclass**:
+```{r}
+with(titanic, chisq.test(Survived, Pclass))
+```
+
+Hay relación.
+
+**SibSp**:
+```{r}
+with(titanic, chisq.test(Survived, SibSp))
+```
+# TODO: Este error proviene de: https://stats.stackexchange.com/questions/81483/warning-in-r-chi-squared-approximation-may-be-incorrect
+Warning causado por categorias con muy pocas observaciones.
+
+
+**Parch**:
+```{r}
+with(titanic, chisq.test(Survived, Parch))
+```
+
+
+**Embarked**:
+```{r}
+with(titanic, chisq.test(Survived, Embarked))
+```
+
+Hay relación.
+
+
+#### 4.3.2 Analisis de la relación entre haber sobrevivido, o no, con las variables numéricas
+
+Para estudiar si existe relación entre las variables numéricas **Age** y **Fare** con la variable **Survived**, se crea un modelo de regresión logística para cada una de las variables.
+
+
+**Age:**
+```{r}
+model.age <- glm(Survived ~ Age, family = binomial(link=logit), data=titanic)
+summary (model.age)
+```
+
+#TODO: Reescrivir -> Existe relción ya que el p-valor es menor que el nivel de significancia.
+
+
+**Fare:**
+
+```{r}
+model.fare <- glm(Survived ~ Fare, family = binomial(link=logit), data=titanic)
+summary (model.fare)
+```
+
+#TODO: comentar
+
+
+
+### 4.3.3 ¿La media de edad de las mujeres es igual o inferior a la de los hombres?
 
 Nos preguntamos si la media de edad de hombres es mayor que la de las mujeres.
 
 #### Análisis visual
 
+
+#TODO: Agrupar ambas densidades men/wmn en un mismo plot
 ```{r}
 ggplot(data=women, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Women's age distribution") + ggtitle("Women's age")
 ```
@@ -466,14 +540,7 @@ shapiro.test(women$Age)
 ggplot(data=men, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Men's age distribution") + ggtitle("Men's age")
 ```
 
-????Aunque las muestras no presentan distribuciones normales, aplicando el Teorema del Límite Central se puede concluir que las medias muestrales siguen una distribución normal
-
-Hipótesis nula: $H_{0}: \mu_W=\mu_M$
-
-Hipótesis alternativa: $H_{1}: \mu_W<\mu_M$
-
-
-????Es un test paramétrico ya que los datos siguen una distribución normal.
+#TODO: Comentar. ????Aunque las muestras no presentan distribuciones normales, aplicando el Teorema del Límite Central se puede concluir que las medias muestrales siguen una distribución normal
 
 El test de contraste que se aplicará en este caso es el de un contrate unilateral de dos muestras independientes sobre la media con varianzas desconocidas. Para saber si las varianzas son diferentes, se debe realizar un test de homoscedasticidad.
 
@@ -483,6 +550,18 @@ var.test(women$Age, men$Age)
 
 Como el p-valor es tan alto, no se puede rechazar la hipótesis nula de que las varianzas son diferentes, por lo tanto el test seguirá una distribución *t-student* con $n_1+n_2-2$ grados de libertad.
 
+#TODO: Plantear que hacemos un contraste de hipotesis.
+
+Pregunta: La media de edad de las mujeres es igual o inferior a la de los hombres?
+
+Hipótesis nula: $H_{0}: \mu_W=\mu_M$
+
+Hipótesis alternativa: $H_{1}: \mu_W<\mu_M$
+
+
+????Es un test paramétrico ya que los datos siguen una distribución normal.
+
+
 ```{r}
 t.test(women$Age, men$Age, alternative = "l", var.equal = TRUE)
 ```
@@ -490,7 +569,7 @@ t.test(women$Age, men$Age, alternative = "l", var.equal = TRUE)
 Como el p-valor es menor que el nivel de significancia, se rechaza la hipótesis nula y se acepta que la media de edad de las mujeres fue menor que la de los hombres.
 
 
-### Modelo de regresión logística
+### 4.4 Modelo de regresión logística
 
 A continuación se irán añadiendo variables independientes al modelo de regresión logística para tratar de obtener el modelo que mejor prediga el dataset test.
 
@@ -528,7 +607,8 @@ cat("The accuracy of the model is ", accuracy.age)
 Se añade la variable **Pclass**.
 
 ```{r}
-model.age.Pclass <- glm(Survived ~ Age + Pclass, family = binomial(link=logit), data=titanic)
+model.age.Pclass <- glm(Survived ~ Age + Pclass, family = binomial(link=logit),
+                        data=titanic)
 summary(model.age.Pclass)
 titanic_test$pred <- predict(model.age.Pclass, titanic_test, type = "response")
 titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
@@ -596,7 +676,7 @@ titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
 accuracy.age.Pclass.Sex.SibSp <- sum(titanic_test$is_ok)/nrow(titanic_test)
 cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp)
 ```
-
+# TODO: Probar de quitar SibSp, las categorias de peso tienen muy pocas observaciones. 
 
 Variable **SibSp** con interacción.
 
@@ -637,7 +717,7 @@ cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch.in)
 Variable **Fare**.
 
 ```{r}
-model.age.Pclass.Sex.SibSp.Parch.Fare <- glm(Survived ~ Age + Pclass + Sex + SibSp + Parch + Fare, family = binomial(link=logit), data=titanic)
+model.age.Pclass.Sex.SibSp.Parch.Fare <- glm(Survived ~ Age + Pclass + Sex + SibSp + Parch + Fare , family = binomial(link=logit), data=titanic)
 summary(model.age.Pclass.Sex.SibSp.Parch.Fare)
 titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.Parch.Fare, titanic_test, type = "response")
 titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
@@ -688,7 +768,6 @@ cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch.Embarke
 
 En este caso la precisión del modelo también decae.
 
-## Ejercicio 5
 
 Representación de los resultados.
 
@@ -700,18 +779,21 @@ results <- data.frame(models_accuracy, models_accuracy_inter, row.names = models
 results
 ```
 
-TODO
+#TODO: gráfico de 2 lineas una para cada columna para ver como varia el accuracy en cada prueba. 
 ```{r}
 #ggplot(results) + geom_point()
 ```
 
 
-## Ejercicio 6
+## Ejercicio 5
 
 
 Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las
 conclusiones? ¿Los resultados permiten responder al problema?
 
+#TODO: 
+- Como afectan las variables a la probabilidad de sobrevivir o no. 
+- Comentar resultados relevantes del estudio para crear un modelo de regresión. 
 
 
 ## Referencias
@@ -724,3 +806,6 @@ conclusiones? ¿Los resultados permiten responder al problema?
 
 
 [3] Amat Rodrigo, Joaquín. Análisis de la homogeneidad de varianza (homocedasticidad)[fecha de publicación: 01/01/2016] [fecha de consulta: 30/05/22] Disponible en: https://rpubs.com/Joaquin_AR/218466
+
+
+[4] The Chi-Square Test for Independence [fecha de consulta: 30/05/22] Disponible en: https://soc.utah.edu/sociology3112/chi-square.php
