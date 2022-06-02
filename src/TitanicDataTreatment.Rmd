@@ -1,6 +1,8 @@
 ---
 title: "PRA2"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 date: '2022-05-16'
 ---
 
@@ -545,7 +547,7 @@ ggplot(data=titanic.men, mapping= aes(x=Age)) + geom_density() + scale_x_continu
 El test de contraste que se aplicará en este caso es el de un contrate unilateral de dos muestras independientes sobre la media con varianzas desconocidas. Para saber si las varianzas son diferentes, se debe realizar un test de homoscedasticidad.
 
 ```{r}
-var.test(titanic.women$Age, men$Age)
+var.test(titanic.women$Age, titanic.men$Age)
 ```
 
 Como el p-valor es tan alto, no se puede rechazar la hipótesis nula de que las varianzas son diferentes, por lo tanto el test seguirá una distribución *t-student* con $n_1+n_2-2$ grados de libertad.
@@ -563,7 +565,7 @@ Hipótesis alternativa: $H_{1}: \mu_W<\mu_M$
 
 
 ```{r}
-t.test(titanic.women$Age, men$Age, alternative = "l", var.equal = TRUE)
+t.test(titanic.women$Age, titanic.men$Age, alternative = "l", var.equal = TRUE)
 ```
 
 Como el p-valor es menor que el nivel de significancia, se rechaza la hipótesis nula y se acepta que la media de edad de las mujeres fue menor que la de los hombres.
