@@ -657,9 +657,9 @@ Como el p-valor es menor que el nivel de significancia, se rechaza la hipótesis
 
 ### 4.4 Modelo de regresión logística
 
-A continuación se irán añadiendo variables independientes al modelo de regresión logística para tratar de obtener el modelo que mejor prediga el dataset test.
+A continuación, se irán añadiendo variables independientes al modelo de regresión logística para tratar de obtener el modelo que mejor prediga el dataset test.
 
-En primer lugar, se divide el dataset en un dataset de train y otro de test para evaluar los modelos. Se selecciona las proporción 1 a 4.
+En primer lugar, se divide el dataset en un dataset de train y otro de test para evaluar los modelos con una proporción 3 a 1.
 
 ```{r}
 
@@ -675,204 +675,133 @@ cat("The train set has", nrow(titanic_test), "rows")
 ```
 
 
-Para evaluar los modelos, se crea el siguiente código: se genera una predicción de la probabilidad, se establece 0 o 1 en función de la probabilidad obtenida estableciendo el umbral en 0,5.
+Para evaluar los modelos, se calcula su precisión a partir del dataset de test.
 
-Finalmente, se calcula la precisión del modelo.
-
-El primer modelo tan solo incluye la variable **Age**.
+En primer lugar, se calcula la precisión con las variables por separado.
 
 ```{r}
-titanic_test$pred <- predict(model.age, titanic_test, type = "response")
+for (var in colnames(titanic_train)){
+  if (var != "Survived"){
+    formula <- as.formula(sprintf("Survived ~ %s", var))
+    model <- glm(formula, family = binomial(link=logit), data=titanic_train)
+  
+    titanic_test$pred <- predict(model, titanic_test, type = "response")
+    titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
+    titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 
+                               1, 0)
+    accuracy <- sum(titanic_test$is_ok)/nrow(titanic_test)
+    cat("The accuracy of the model with ", var, " is ", accuracy, "\n")
+  }
+}
+```
+
+A continuación, se van añadiendo las variables con mejores resultados al modelo.
+
+
+#### Sex y el resto de variables
+
+```{r}
+for (var in colnames(titanic_train)){
+  if (var != "Sex" && var != "Survived"){
+    formula <- as.formula(sprintf("Survived ~ Sex * %s", var))
+    model <- glm(formula, family = binomial(link=logit), data=titanic_train)
+  
+    titanic_test$pred <- predict(model, titanic_test, type = "response")
+    titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
+    titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 
+                               1, 0)
+    accuracy <- sum(titanic_test$is_ok)/nrow(titanic_test)
+    cat("The accuracy of the model with Sex and ", var, " is ", accuracy, "\n")
+  }
+}
+```
+
+Las variables que mejores resultados muestran son **Parch** y **SibSp**. Como la variable **Parch** muestra un warning de correlación, se decide incluir la variable **SibSp** en el modelo.
+
+#### Sex, SibSp y el resto de variables
+
+```{r}
+for (var in colnames(titanic_train)){
+  if (var != "Sex" && var != "Survived" && var != "SibSp" && var != "Parch"){
+    formula <- as.formula(sprintf("Survived ~ Sex * SibSp + %s", var))
+    model <- glm(formula, family = binomial(link=logit), data=titanic_train)
+  
+    titanic_test$pred <- predict(model, titanic_test, type = "response")
+    titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
+    titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 
+                               1, 0)
+    accuracy <- sum(titanic_test$is_ok)/nrow(titanic_test)
+    cat("The accuracy of the model with Sex, SibSp and ", var, " is ", accuracy, "\n")
+  }
+}
+```
+
+Se hace el estudio sin las interacciones, ya que la gran cantidad de términos de correlación harían que los modelos generados no fuesen fiables.
+
+Se decide añadir ahora la variable **Pclass**.
+
+
+#### Sex, SibSp, Pclass y el resto de variables.
+
+```{r}
+for (var in colnames(titanic_train)){
+  if (var != "Sex" && var != "Survived" && var != "SibSp" && var != "Parch"
+      && var != "Pclass"){
+    formula <- as.formula(sprintf("Survived ~ Sex * SibSp + Pclass * %s", var))
+    model <- glm(formula, family = binomial(link=logit), data=titanic_train)
+  
+    titanic_test$pred <- predict(model, titanic_test, type = "response")
+    titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
+    titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 
+                               1, 0)
+    accuracy <- sum(titanic_test$is_ok)/nrow(titanic_test)
+    cat("The accuracy of the model with Sex, SibSp, Pclass and ", var, " is ",
+        accuracy, "\n")
+  }
+}
+```
+
+La variable **Age** muestra los mejores resultados.
+
+
+#### Sex, SibSp, Pclass, Age y el resto de variables.
+
+```{r}
+for (var in colnames(titanic_train)){
+  if (var != "Sex" && var != "Survived" && var != "SibSp" && var != "Parch"
+      && var != "Pclass" && var != "Age"){
+    formula <- as.formula(sprintf("Survived ~ Sex * SibSp + Pclass * Age * %s",
+                                  var))
+    model <- glm(formula, family = binomial(link=logit), data=titanic_train)
+  
+    titanic_test$pred <- predict(model, titanic_test, type = "response")
+    titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
+    titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 
+                               1, 0)
+    accuracy <- sum(titanic_test$is_ok)/nrow(titanic_test)
+    cat("The accuracy of the model with Sex, SibSp, Pclass, Age and ", var,
+        " is ", accuracy, "\n")
+  }
+}
+```
+
+La precisión de los modelos es menor. Se decide que el modelo final sea el del apartado anterior.
+
+
+```{r}
+model.final <- glm(Survived ~ Sex * SibSp + Pclass * Age, family = binomial(link=logit), data=titanic_train)
+summary(model.final)
+titanic_test$pred <- predict(model.final, titanic_test, type = "response")
 titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
 titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age)
+accuracy.final <- sum(titanic_test$is_ok)/nrow(titanic_test)
+cat("The accuracy of the final model is ", accuracy.final)
 ```
 
-
-Se añade la variable **Pclass**.
-
-```{r}
-model.age.Pclass <- glm(Survived ~ Age + Pclass, family = binomial(link=logit),
-                        data=titanic)
-summary(model.age.Pclass)
-titanic_test$pred <- predict(model.age.Pclass, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass)
-```
-
-
-Se observa como la precisión aumenta hasta un 10%.
-
-
-A continuación, se añade al modelo anterior la interacción entre las variables **Age** y **Pclas**.
-
-```{r}
-model.age.Pclass.in <- glm(Survived ~ Age * Pclass, family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.in)
-titanic_test$pred <- predict(model.age.Pclass.in, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.in <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.in)
-```
-
-A pesar de que varios términos no resultan significativos, la precisión del modelo aumenta ligeramente.
-
-
-Se procederá de igual forma con el resto de variables disponbles, en un primer modelo se añadirá la variable sin interacción y a continuación con interacción.
-
-Variable **Sex**.
-
-```{r}
-model.age.Pclass.Sex <- glm(Survived ~ Age + Pclass + Sex, family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.Sex)
-titanic_test$pred <- predict(model.age.Pclass.Sex, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex)
-```
-
-
-Variable **Sex** con interacciones.
-
-```{r}
-model.age.Pclass.Sex.in <- glm(Survived ~ Age * Pclass * Sex, family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.Sex.in)
-titanic_test$pred <- predict(model.age.Pclass.Sex.in, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.in <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.in)
-```
-
-Ocurre lo mismo que con la variable anterior, aunque los términos de interacción no sean significativos, la precisión del modelo aumenta.
-
-Variable **SibSp**.
-
-```{r}
-model.age.Pclass.Sex.SibSp <- glm(Survived ~ Age + Pclass + Sex + SibSp, family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.Sex.SibSp)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp)
-```
-# TODO: Probar de quitar SibSp, las categorias de peso tienen muy pocas observaciones. 
-
-Variable **SibSp** con interacción.
-
-```{r}
-model.age.Pclass.Sex.SibSp.in <- glm(Survived ~ Age * Pclass * Sex * SibSp, family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.Sex.SibSp.in)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.in, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp.in <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.in)
-```
-
-Variable **Parch**.
-
-```{r}
-model.age.Pclass.Sex.SibSp.Parch <- glm(Survived ~ Age + Pclass + Sex + SibSp + Parch, family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.Sex.SibSp.Parch)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.Parch, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp.Parch <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch)
-```
-
-Variable **Parch** con interacción. Se evita imprimir el resumen del modelo ya que hay gran cantidad de términos.
-
-```{r}
-model.age.Pclass.Sex.SibSp.Parch.in <- glm(Survived ~ Age * Pclass * Sex * SibSp * Parch, family = binomial(link=logit), data=titanic)
-#summary(model.age.Pclass.Sex.SibSp.Parch.in)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.Parch.in, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp.Parch.in <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch.in)
-```
-
-Variable **Fare**.
-
-```{r}
-model.age.Pclass.Sex.SibSp.Parch.Fare <- glm(Survived ~ Age + Pclass + Sex + SibSp + Parch + Fare , family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.Sex.SibSp.Parch.Fare)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.Parch.Fare, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp.Parch.Fare <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch.Fare)
-```
-
-Variable **Fare** con interacciones.
-
-```{r}
-model.age.Pclass.Sex.SibSp.Parch.Fare.in <- glm(Survived ~ Age * Pclass * Sex * SibSp * Parch * Fare, family = binomial(link=logit), data=titanic)
-#summary(model.age.Pclass.Sex.SibSp.Parch.Fare.in)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.Parch.Fare.in, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp.Parch.Fare.in <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch.Fare.in)
-```
-
-En este caso la precisión del modelo decae, por lo que se excluye la variable **Fare**.
-
-
-Variable **Embarked**.
-
-```{r}
-model.age.Pclass.Sex.SibSp.Parch.Embarked <- glm(Survived ~ Age + Pclass + Sex + SibSp + Parch + Embarked, family = binomial(link=logit), data=titanic)
-summary(model.age.Pclass.Sex.SibSp.Parch.Embarked)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.Parch.Embarked, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp.Parch.Embarked <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch.Embarked)
-```
-
-
-Variable **Embarked** con interacciones.
-
-```{r}
-model.age.Pclass.Sex.SibSp.Parch.Embarked.in <- glm(Survived ~ Age * Pclass * Sex * SibSp * Parch * Embarked, family = binomial(link=logit), data=titanic)
-#summary(model.age.Pclass.Sex.SibSp.Parch.Embarked.in)
-titanic_test$pred <- predict(model.age.Pclass.Sex.SibSp.Parch.Embarked.in, titanic_test, type = "response")
-titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
-titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
-accuracy.age.Pclass.Sex.SibSp.Parch.Embarked.in <- sum(titanic_test$is_ok)/nrow(titanic_test)
-cat("The accuracy of the model is ", accuracy.age.Pclass.Sex.SibSp.Parch.Embarked.in)
-```
-
-En este caso la precisión del modelo también decae.
-
-
-Representación de los resultados.
-
-```{r}
-models_names <- c("Age", "Adding Pclass", "Adding Sex", "Adding SibSp", "Adding Parch", "Adding Fare", "Adding Embarked")
-models_accuracy <- c(accuracy.age, accuracy.age.Pclass, accuracy.age.Pclass.Sex, accuracy.age.Pclass.Sex.SibSp,  accuracy.age.Pclass.Sex.SibSp.Parch, accuracy.age.Pclass.Sex.SibSp.Parch.Fare, accuracy.age.Pclass.Sex.SibSp.Parch.Embarked)
-models_accuracy_inter <- c(0 ,accuracy.age.Pclass.in, accuracy.age.Pclass.Sex.in, accuracy.age.Pclass.Sex.SibSp.in, accuracy.age.Pclass.Sex.SibSp.Parch.in, accuracy.age.Pclass.Sex.SibSp.Parch.Fare.in, accuracy.age.Pclass.Sex.SibSp.Parch.Embarked.in)
-results <- data.frame(models_accuracy, models_accuracy_inter, row.names = models_names)
-results
-```
-
-#TODO: gráfico de 2 lineas una para cada columna para ver como varia el accuracy en cada prueba. 
-```{r}
-#ggplot(results) + geom_point()
-```
+Aunque haya varios términos no significativos, la precisión del modelo final es la más alta de entre todos los que se han estudiado.
 
 
 ## Ejercicio 5
-
 
 Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las
 conclusiones? ¿Los resultados permiten responder al problema?
