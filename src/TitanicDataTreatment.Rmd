@@ -1,8 +1,8 @@
 ---
 title: "PRA2"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 date: '2022-05-16'
 ---
 
@@ -224,18 +224,13 @@ Análisis de los datos.
 
 En este análisis pretendemos analizar el peso de las distintas variables del conjunto sobre la variable dependiente **Survived**. En el Ejercicio 2 escogimos el subset del conjunto de datos que consideramos de interés analítico para el estudio. Este consiste de las variables **Survived**, **Pclass**, **Sex**, **Age**, **SibSp**, **Parch**, **Fare** y **Embarked**.
 
-De las variables de interés para el análisis, seleccionaremos ciertas agrupaciones que nos resultan interesantes de analizar en más profundidad. 
-Estas serán la agrupación por genero, la variable **Sex**, y la agrupación por clase socio económica, la variable **Pclass**.
+De las variables de interés para el análisis, seleccionaremos una agrupación por genero, la variable **Sex**, para realizar un análisis posteriormente por contraste de hipótesis.
 
 ```{r}
 # Agrupación por género
 titanic.men   <- subset(titanic, Sex == "male")
 titanic.women <- subset(titanic, Sex == "female")
 
-# Agrupación por clase socio económica
-titanic.high  <- subset(titanic, Pclass == "1")
-titanic.mid   <- subset(titanic, Pclass == "2")
-titanic.low   <- subset(titanic, Pclass == "3")
 ```
 
 
@@ -243,23 +238,28 @@ titanic.low   <- subset(titanic, Pclass == "3")
 
 Comprobación de la normalidad y homogeneidad de la varianza.
 
-Analizaremos la normalidad y la homogeniedad de la varianza para las variables continuas **Age** y **Fare**.
 
+Analizaremos la normalidad y la homogeniedad de la varianza para las variables continuas **Age** y **Fare**.
 
 #### Age:
 
 Análisis visual de normalidad:
-```{r}
-qqnorm(titanic$Age,main = "Normal Q-Q Plot para Age")
-qqline(titanic$Age,col = "red")
+```{r, out.width="50%"}
+
+p1 <- ggplot(titanic, aes(sample = Age)) + stat_qq() + 
+        stat_qq_line(colour= "red") +
+        ylab("Sample Quantiles") + xlab("Theoretical Quantiles") +
+        ggtitle("Normal Q-Q Plot para Age")
 
 #[1]
-ggplot(titanic, aes(x = Age)) + 
-  geom_histogram(aes(y = ..density..), bins = 30,
-                 colour = 1, fill = "white") +
-  geom_density(lwd = 1, colour = 4,
-               fill = 4, alpha = 0.25) +
-  ggtitle("Distribución y densidad de Age")
+p2 <- ggplot(titanic, aes(x = Age)) + 
+        geom_histogram(aes(y = ..density..), bins = 30,
+                       colour = 1, fill = "white") +
+        geom_density(lwd = 1, colour = 4,
+                     fill = 4, alpha = 0.25) +
+        ggtitle("Distribución y densidad de Age")
+
+grid.arrange(p1,p2,ncol = 2, nrow = 1)
 ```
 
 Para determinar que puede haber normalidad, deberíamos poder ver como la mayoría de observaciones se alinea encima de la línea roja (indica el comportamiento esperado de una variable normal) para la representación Quantil-Quantil. Este no es el caso observado para la variable **Age**. 
@@ -306,17 +306,20 @@ Se aplica el test para la variable **Age** y se comparan las varianzas cuando es
 #### Fare
 
 Análisis visual de normalidad:
-```{r}
-qqnorm(titanic$Fare,main = "Normal Q-Q Plot para Fare")
-qqline(titanic$Fare,col = "red")
+```{r, out.width="50%"}
+p1 <- ggplot(titanic, aes(sample = Fare)) + stat_qq() + 
+        stat_qq_line(colour= "red") +
+        ylab("Sample Quantiles") + xlab("Theoretical Quantiles") +
+        ggtitle("Normal Q-Q Plot para Fare")
 
 #[1]
-ggplot(titanic, aes(x = Fare)) + 
-  geom_histogram(aes(y = ..density..), bins = 30,
-                 colour = 1, fill = "white") +
-  geom_density(lwd = 1, colour = 4,
-               fill = 4, alpha = 0.25) +
-  ggtitle("Distribución y densidad de Fare")
+p2 <- ggplot(titanic, aes(x = Fare)) + 
+        geom_histogram(aes(y = ..density..), bins = 30,
+                       colour = 1, fill = "white") +
+        geom_density(lwd = 1, colour = 4,
+                     fill = 4, alpha = 0.25) +
+        ggtitle("Distribución y densidad de Fare")
+grid.arrange(p1,p2,ncol = 2, nrow = 1)
 ```
 
 Observamos en el gráfico Normal Q-Q, como la mayoría de observaciones no se alinea encima de la línea roja que indica como debería comportarse una variable normal. Este gráfico nos indica que **Fare** no sigue una distribución normal. 
@@ -335,7 +338,7 @@ jb.norm.test(titanic$Fare)
 frosini.norm.test(titanic$Fare)
 ```
 
-Para los tests de normalidad Shapiro-Wilk, Jarque-Bera y Frosini, la hipótesis nula indica normalidad, mientras que la hipotesis alternativa indica que no hay normalidad. En todos ellos nos encontramos un valor p muy pequeño, inferior a todos los limites de significancia comunmente usados, por lo que debemos descartar la hipotesis nula de normalidad.
+Para los tests de normalidad Shapiro-Wilk, Jarque-Bera y Frosini, la hipótesis nula indica normalidad, mientras que la hipotesis alternativa indica que no hay normalidad. En todos ellos nos encontramos un valor p muy pequeño, inferior a todos los limites de significancia comunmente usados, por lo que debemos descartar la hipótesis nula de normalidad.
 
 
 Análisis de homogeniedad de la varianza:
@@ -368,7 +371,58 @@ Aplicación de pruebas estadísticas para comparar los grupos de datos. En funci
 
 #### 4.3.1 Analisis de la relación entre haber sobrevivido, o no, con las variables categóricas
 
-Primeramente analizaremos de forma visual si pueden haber correlaciones entre las variables categóricas del conjunto **Sex**, **Pclass**, **SibSp**, **Parch** y **Embarked** con  **Survive**, la variable que nos indica si los pasajeros sobrevivieron al accidente. Para ello utilizaremos un gráfico de frecuencias, que nos permitir al mismo tiempo conocer mejor como se distribuyen estas variables.
+##### 4.3.1.1 Prueba Chi-cuadrado
+
+Para confirmar si hay relación entre las variables categóricas **Sex**, **Pclass**, **SibSp**, **Parch** y **Embarked** con la variable **Survive** que nos indica si los pasajeros sobrevivieron o no al accidente, utilizaremos el test Chi-cuadrado de Pearson [4].
+
+Para el test Chi-cuadrado, las hipótesis son las siguientes:
+
+Hipótesis nula: No existe relación entre ambas variables.
+Hipótesis alternativa: Existe relación entre las variables. 
+
+Un valor p inferior a los valores comunes de significancia ~0.05, nos indica que podemos descartar la hipótesis nula, por lo tanto, existe relación, de lo contrario nos indicaría que no hay relación entre ambas variables.
+
+**Sex**:
+```{r}
+with(titanic, chisq.test(Survived, Sex))
+```
+
+Hay relación.
+
+
+**Pclass**:
+```{r}
+with(titanic, chisq.test(Survived, Pclass))
+```
+
+Hay relación.
+
+**SibSp**:
+```{r}
+with(titanic, chisq.test(Survived, SibSp))
+```
+
+Hay relación, pero observamos un aviso que nos indica que existe cierto error en el resultado. Este aviso es provocado por categorias con muy pocas observaciones[5], lo evaluaremos posteriormente con un análisis visual.
+
+**Parch**:
+```{r}
+with(titanic, chisq.test(Survived, Parch))
+```
+
+Hay relación, pero observamos un aviso que nos indica que existe cierto error en el resultado. Este aviso es provocado por categorias con muy pocas observaciones[5], lo evaluaremos posteriormente con un análisis visual.
+
+**Embarked**:
+```{r}
+with(titanic, chisq.test(Survived, Embarked))
+```
+
+Hay relación.
+
+
+
+##### 4.3.1.2 Análisis visual
+
+Analizaremos de forma visual las posibles correlaciones entre las variables categóricas del conjunto **Sex**, **Pclass**, **SibSp**, **Parch** y **Embarked** con  **Survive**, la variable que nos indica si los pasajeros sobrevivieron al accidente. Para ello utilizaremos un gráfico de frecuencias, que nos permitir al mismo tiempo conocer mejor como se distribuyen estas variables.
 
 ```{r}
 # Histogramas
@@ -397,30 +451,56 @@ grid.arrange(d.Sex, d.Pclass, d.SibSp, d.Embarked, d.Parch,
              ncol = 2, nrow = 3)
 ```
 
-#TODO : Comentar el gráfico
+Si observamos la variable **Sex**, podemos observar una mayor probabilidad de sobrevivir siendo mujer que siendo hombre. 
+
+Para el caso de de la variable que nos indica la clase socio económica, observamos una gran diferencia entre las probabilidades de sobrevivir en función de la clase. Más de la mitad de los pasajeros de primera clase sobrevivieron, de los pasajeros de segunda clase sobrevivieron aproximadamente la mitad, y para los de clase baja solo un cuarto lo hicieron, siendo esta la clase más numerosa. 
+
+Si nos fijamos ahora en las variables relacionadas con tener familia a bordo, **SibSp** y **Parch**, primero debemos destacar que la mayoría de pasajeros no tenían familiares a bordo, de ellos un poco más de un cuarto sobrevivieron. La segunda categoría más numerosa es tener un hermano o esposa/o a bordo, para el caso de **SibSp**, o tener un hijo o padre a bordo, para **Parch**, en ambos casos observamos que aproximadamente la mitad sobrevivieron, por lo que tener un familiar a bordo parece que influye en la probabilidad de sobrevivir. El mismo caso sucede para tener dos padres o hijos a bordo, aproximadamente la mitad sobreviven. Los demás casos donde hay más de dos familiares a bordo tienen tan pocas observaciones que no se pueden considerar relevantes para extraer conclusiones.
+
+Finalmente comentaremos la variable **Embarked**, que nos indica en que puerto subieron los pasajeros. Observamos que la mayoría de pasajeros subieron en el puerto indicado como S, de los cuales menos de la mitad sobrevivieron. En el caso de pasajeros que subieron en los puertos indicados como C y Q, aproximadamente la mitad sobrevivieron.
+
+Podemos intuir una relación directa con todas las variables categóricas observadas, y la probabilidad de sobrevivir.
 
 
-#TODO: Introducir bien el Odds ratio y 
-A continuación, se calculará el Odds-Ratio de la variable **Survived** para cada una de las variables categóricas. El OR es un número que permite conocer cómo varía la probabilidad de que la variable dependiente adquiera un valor en función del valor que adquiera la variable independiente. Para calcularlo se crea una función.
+##### 4.3.1.3 Odds-Ratio
 
-Se calcularán los OR de sobrevivir frente a no sobrevivir.
+A continuación, para representar de forma numérica las probabilidades de sobrevivir en función de la categoría de cada variable categórica, utilizaremos el calculo del Odds-Ratio para la variable dependiente **Survived**. El OR es un número que permite conocer cómo varía la probabilidad de que la variable dependiente adquiera un valor en función del valor que adquiera la variable independiente.
+
+**Sex:**
 
 ```{r}
-# Se muestra la tabla de frecuencia
-print(table(titanic$Survived, titanic$Pclass), rownames(c("Not survived", "Survived")))
-
 # Se calculan los diferentes Odds-Ratios
-a <- as.data.frame(table(titanic$Survived, titanic$Pclass))
-odds.high.class <- a[2,]$Freq  / a[1,]$Freq
-cat("\nThe odds for the high class is ", odds.high.class, "\n")
-odds.medium.class <- a[4,]$Freq  / a[3,]$Freq
-cat("The odds for the medium class is ", odds.medium.class, "\n")
-odds.low.class <- a[6,]$Freq  / a[5,]$Freq
-cat("The odds for the low class is ", odds.low.class, "\n\n")
 
-cat("The OR between the high class and the low class was", odds.high.class / odds.low.class, "\n")
-cat("The OR between the medium class and the low class was", odds.medium.class / odds.low.class, "\n")
-cat("The OR between the high class and the medium class was", odds.high.class / odds.medium.class, "\n")
+# Tabla de frecuencias
+a <- as.data.frame(table(titanic$Survived, titanic$Sex))
+
+odds.female <- a[2,]$Freq  / a[1,]$Freq
+odds.male <- a[4,]$Freq  / a[3,]$Freq
+
+cat("The OR between the female and the male was", odds.female / odds.male, "\n")
+```
+
+Una mujer tenía 12,5 veces más probabilidades de sobrevivir que un hombre.
+
+
+**Pclass:**
+
+```{r}
+# Se calculan los diferentes Odds-Ratios
+
+# Tabla de frecuencias
+a <- as.data.frame(table(titanic$Survived, titanic$Pclass))
+
+odds.high.class <- a[2,]$Freq  / a[1,]$Freq
+odds.medium.class <- a[4,]$Freq  / a[3,]$Freq
+odds.low.class <- a[6,]$Freq  / a[5,]$Freq
+
+cat("The OR between the high class and the low class was", odds.high.class / 
+                                                           odds.low.class, "\n")
+cat("The OR between the medium class and the low class was", odds.medium.class / 
+                                                          odds.low.class, "\n")
+cat("The OR between the high class and the medium class was", odds.high.class / 
+                                                        odds.medium.class, "\n")
 ```
 
 Analizando los resultados, una persona de clase alta tenía 5,19 veces más probabilidades de sobrevivir que una persona de clase baja.
@@ -429,76 +509,79 @@ Una persona de clase media tenía casi el triple de probabilidades de sobrevivir
 
 Una persona de clase alta tenía casi el doble de probabilidades de sobrevivir que una persona de clase media.
 
-A continuación se calcularán los OR de la variable **Sex**.
 
+**SibSp:**
+
+Para esta variable no tendremos en cuenta las categorías con muy pocas observaciones.
 ```{r}
-# Se muestra la tabla de frecuencia
-print(table(titanic$Survived, titanic$Sex), rownames(c("Not survived", "Survived")))
+# Tabla de frecuencias
+a <- as.data.frame(table(titanic$Survived, titanic$SibSp))
 
-# Se calculan los diferentes Odds-Ratios
-a <- as.data.frame(table(titanic$Survived, titanic$Sex))
-odds.female <- a[2,]$Freq  / a[1,]$Freq
-cat("\nThe odds for the female is ", odds.female, "\n")
-odds.male <- a[4,]$Freq  / a[3,]$Freq
-cat("The odds for the male is ", odds.male, "\n")
+odds.zero.SibSp <- a[2,]$Freq  / a[1,]$Freq
+odds.one.SibSp <- a[4,]$Freq  / a[3,]$Freq
+odds.two.SibSp <- a[6,]$Freq  / a[5,]$Freq
 
-cat("The OR between the female and the male was", odds.female / odds.male, "\n")
+cat("The OR between two SibSp and zero SibSp", odds.two.SibSp / 
+                                               odds.zero.SibSp, "\n")
+cat("The OR between one SibSp and two SibSp", odds.one.SibSp / 
+                                              odds.two.SibSp, "\n")
+cat("The OR between one SibSp and zero SibSp", odds.one.SibSp / 
+                                               odds.zero.SibSp, "\n")
 ```
 
-Una mujer tenía 12,5 veces más probabilidades de sobrevivir que un hombre.
+Observando los resultados, una persona con dos hermanos y/o esposos a bordo, tenia 1.6 veces más probabilidades de sobrevivir que una persona sin hermanos o esposos a bordo.
+Una persona con un hermano o esposo, tenia 1.33 veces más probabilidades de sobrevivir que una persona con dos hermanos o esposos a bordo.
+
+Una persona con un hermano o esposo a bordo, tenia 2.22 veces más probabilidades de sobrevivir que un pasajero sin hermanos o esposos a bordo.
 
 
+**Parch:**
 
-
-A continuación, para confirmar si hay relación, utilizaremos el test Chi-cuadrado de Pearson [4] relación entre las variables categóricas **Sex**, **Pclass**, **SibSp**, **Parch** y **Embarked** con la variable **Survive** que nos indica si los pasajeros sobrevivieron o no al accidente.
-
-Para el test Chi-cuadrado, las hipótesis son las siguientes:
-
-Hipótesis nula: No existe relación entre ambas variables.
-Hipótesis alternativa: Existe relación entre las variables. 
-
-Un valor p inferior a los valores comunes de significancia ~0.05, nos indica que podemos descartar la hipótesis nula, por lo tanto, existe relación, de lo contrario nos indicaría que no hay relación entre ambas variables.
-
-**Sex**:
+Para esta variable no tendremos en cuenta las categorías con muy pocas observaciones.
 ```{r}
-with(titanic, chisq.test(Survived, Sex))
+# Tabla de frecuencias
+a <- as.data.frame(table(titanic$Survived, titanic$Parch))
+
+odds.zero.Parch <- a[2,]$Freq  / a[1,]$Freq
+odds.one.Parch <- a[4,]$Freq  / a[3,]$Freq
+odds.two.Parch <- a[6,]$Freq  / a[5,]$Freq
+
+cat("The OR between two Parch  and zero Parch ", odds.two.Parch  / odds.zero.Parch , "\n")
+cat("The OR between one Parch  and two Parch ", odds.one.Parch  / odds.two.Parch , "\n")
+cat("The OR between one Parch  and zero Parch ", odds.one.Parch  / odds.zero.Parch , "\n")
 ```
 
-Hay relación.
+Observando los resultados, una persona con dos padres o hijos a bordo, tenia 1.93 veces más probabilidades de sobrevivir que una persona sin padres o hijos a bordo.
+Una persona con un padre o hijo, tenia 1.21 veces más probabilidades de sobrevivir que una persona con dos padres o hijos a bordo.
+
+Una persona con un padre o hijo a bordo, tenia 2.33 veces más probabilidades de sobrevivir que un pasajero sin padres o hijos a bordo.
 
 
-**Pclass**:
+**Embarked:**
+
 ```{r}
-with(titanic, chisq.test(Survived, Pclass))
+# Tabla de frecuencias
+a <- as.data.frame(table(titanic$Survived, titanic$Embarked))
+
+odds.C <- a[2,]$Freq  / a[1,]$Freq
+odds.Q <- a[4,]$Freq  / a[3,]$Freq
+odds.S <- a[6,]$Freq  / a[5,]$Freq
+
+cat("The OR between embarking in Q and embarking in S ", odds.Q  / odds.S , "\n")
+cat("The OR between embarking in C and embarking in Q ", odds.C  / odds.Q , "\n")
+cat("The OR between embarking in C and embarking in S ", odds.C  / odds.S , "\n")
 ```
 
-Hay relación.
+Observamos que una persona que hubiera embarcado en el puerto Q, tenia 1.24 veces más probabilidades de sobrevivir que una persona que hubiera embarcado en el puerto S.
 
-**SibSp**:
-```{r}
-with(titanic, chisq.test(Survived, SibSp))
-```
-# TODO: Este error proviene de: https://stats.stackexchange.com/questions/81483/warning-in-r-chi-squared-approximation-may-be-incorrect
-Warning causado por categorias con muy pocas observaciones.
+Una persona que hubiera embarcado en el puerto C, tenia 1.88 veces más probabilidades de sobrevivir que una persona que hubiera embarcado en el puerto Q.
 
-
-**Parch**:
-```{r}
-with(titanic, chisq.test(Survived, Parch))
-```
-
-
-**Embarked**:
-```{r}
-with(titanic, chisq.test(Survived, Embarked))
-```
-
-Hay relación.
+Finalmente, una persona que hubiera embarcado en el puerto C, tenia 2.34 veces más probabilidades de sobrevivir, que una persona que hubiera embarcado en el puerto S.
 
 
 #### 4.3.2 Analisis de la relación entre haber sobrevivido, o no, con las variables numéricas
 
-Para estudiar si existe relación entre las variables numéricas **Age** y **Fare** con la variable **Survived**, se crea un modelo de regresión logística para cada una de las variables.
+Para estudiar si existe relación entre las variables numéricas **Age** y **Fare** con la variable **Survived**, se crea un modelo de regresión logística para cada una de las variables y poder evaluar si se trata de variables relevantes para predecir **Survived**.
 
 
 **Age:**
@@ -507,7 +590,7 @@ model.age <- glm(Survived ~ Age, family = binomial(link=logit), data=titanic)
 summary (model.age)
 ```
 
-#TODO: Reescrivir -> Existe relción ya que el p-valor es menor que el nivel de significancia.
+Si observamos el valor p de la variable **Age**, en la tabla de coeficientes, podemos ver que se trata de una variable significante al predecir **Survived**, para valores de significancia menores a 0.01.
 
 
 **Fare:**
@@ -517,13 +600,14 @@ model.fare <- glm(Survived ~ Fare, family = binomial(link=logit), data=titanic)
 summary (model.fare)
 ```
 
-#TODO: comentar
+En el caso de **Fare**, en la tabla de coeficientes, observamos un valor p inferior a todos los valores comunes del nivel de significancia. Esto nos indica que la variable es significante a la hora de predecir **Survived**.
 
 
 
 ### 4.3.3 ¿La media de edad de las mujeres es igual o inferior a la de los hombres?
 
-Nos preguntamos si la media de edad de hombres es mayor que la de las mujeres.
+Nos preguntamos si la media de edad de las mujeres es igual o inferior a la de los hombres.
+
 
 #### Análisis visual
 
@@ -811,3 +895,6 @@ conclusiones? ¿Los resultados permiten responder al problema?
 
 
 [4] The Chi-Square Test for Independence [fecha de consulta: 30/05/22] Disponible en: https://soc.utah.edu/sociology3112/chi-square.php
+
+
+[5] Warning in R - Chi-squared approximation may be incorrect [fecha de consulta: 30/05/22] Disponible en: https://stats.stackexchange.com/questions/81483/warning-in-r-chi-squared-approximation-may-be-incorrect
