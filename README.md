@@ -16,6 +16,8 @@ La actividad ha sido realizada por **Marta Coll Pol** y **Manuel de Blas Pino**.
 
 data/train.csv, contiene el conjunto de datos utilizado en el estudio analítico.
 
+data/Titanic_clean.csv, conjunto de datos limpio y preparado para el analísis.
+
 src/TitanicDataTreatment.Rmd, contiene una Notebook donde se presenta el proyecto analítico realizado con el correspondiente código en R y las explicaciones de los pasos realizados y los resultados.
 
 src/TitanicDataTreatment.html, contiene el export del Notebook en HTML.
