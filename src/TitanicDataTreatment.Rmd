@@ -182,7 +182,7 @@ Identifica y gestiona los valores extremos.
 
 Los valores extremos se dan en las variables continuas cuando se observan valores significativamente altos o significativamente bajos, que generan duda sobre su veracidad. 
 
-A continuación se muestran las estadísticas básicas del conjunto de datos para identificar posibles valores extremos (*outliers*) en las variables continuas **Age**, **SibSp**, **Parch** y **Fare**.
+A continuación se muestran las estadísticas básicas del conjunto de datos para identificar posibles valores extremos (*outliers*) en las variables **Age**, **SibSp**, **Parch** y **Fare**.
 
 ```{r}
 summary(titanic)
