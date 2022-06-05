@@ -88,7 +88,7 @@ Observamos que el conjunto de datos consta de 891 observaciones y 12 variables q
     Puerto en el que embarco el pasajero. C = Cherbourg, Q = Queenstown, S = Southampton (String).
 
 
-Observamos que muchas de estas variables se presentan como Integers o Strings, cuando realmente nos expresan una categoria. Por ello factorizaremos las variables categoricas.
+Observamos que muchas de estas variables se presentan como Integers o Strings, cuando realmente nos expresan una categoría. Por ello factorizaremos las variables categoricas.
 
 ```{r}
 df$Survived <- factor(df$Survived)
@@ -102,9 +102,9 @@ df$Embarked <- factor(df$Embarked)
 
 ### 1.3 Motivación del estudio
 
-Cuando el Titanic fue construido, se considero que este era imposible de hundir. Durante su viaje inaugural, el Titanic se hundió tras chocar contra un iceberg y la escasez de barcos salvavidas convirtió el accidente en una gran tragedia que resultó en la muerte de 1502 personas del conjunto de 2224 pasajeros y tripulación. Claramente la suerte tuvo un papel importante en determinar quien sobrevivió y quien no, pero se puede intuir que ciertos grupos de personas tuvieron más probabilidades de hacerlo que otros. 
+Cuando el Titanic fue construido, se considero que este era imposible de hundir. Durante su viaje inaugural, el Titanic se hundió tras chocar contra un iceberg y la escasez de barcos salvavidas convirtió el accidente en una gran tragedia que resultó en la muerte de 1502 personas del conjunto de 2224 pasajeros y tripulación. Claramente, la suerte tuvo un papel importante en determinar quien sobrevivió y quien no, pero se puede intuir que ciertos grupos de personas tuvieron más probabilidades de hacerlo que otros. 
 
-En este estudio nos centraremos en responder a la pregunta "Que grupos de personas tuvieron más probabilidades de sobrevivir el accidente?". O dicho de otra forma, "¿Cuales fueron los factores de peso que influyeron en que los pasajeros tuvieran mayor probabilidad de sobrevivir?".
+En este estudio nos centraremos en responder a la pregunta "¿Qué grupos de personas tuvieron más probabilidades de sobrevivir el accidente?". O dicho de otra forma, "¿Cuáles fueron los factores de peso que influyeron en que los pasajeros tuvieran mayor probabilidad de sobrevivir?".
 
 
 ## Ejercicio 2
@@ -192,7 +192,7 @@ Observamos que los valores mínimos y máximos de la variable **Age**, se mantie
 
 Utilizaremos la representación *boxplot* para identificar los *outliers* de **Fare**.
 
-```{r}
+```{r, out.width="50%"}
 ggplot(titanic) +
   aes(x = "", y = Fare) +
   geom_boxplot(fill = "#0c4c8a") +
@@ -546,9 +546,12 @@ odds.zero.Parch <- a[2,]$Freq  / a[1,]$Freq
 odds.one.Parch <- a[4,]$Freq  / a[3,]$Freq
 odds.two.Parch <- a[6,]$Freq  / a[5,]$Freq
 
-cat("The OR between two Parch  and zero Parch ", odds.two.Parch  / odds.zero.Parch , "\n")
-cat("The OR between one Parch  and two Parch ", odds.one.Parch  / odds.two.Parch , "\n")
-cat("The OR between one Parch  and zero Parch ", odds.one.Parch  / odds.zero.Parch , "\n")
+cat("The OR between two Parch  and zero Parch ", odds.two.Parch  / 
+      odds.zero.Parch , "\n")
+cat("The OR between one Parch  and two Parch ", odds.one.Parch  / 
+      odds.two.Parch , "\n")
+cat("The OR between one Parch  and zero Parch ", odds.one.Parch  / 
+      odds.zero.Parch , "\n")
 ```
 
 Observando los resultados, una persona con dos padres o hijos a bordo, tenia 1.93 veces más probabilidades de sobrevivir que una persona sin padres o hijos a bordo.
@@ -567,9 +570,12 @@ odds.C <- a[2,]$Freq  / a[1,]$Freq
 odds.Q <- a[4,]$Freq  / a[3,]$Freq
 odds.S <- a[6,]$Freq  / a[5,]$Freq
 
-cat("The OR between embarking in Q and embarking in S ", odds.Q  / odds.S , "\n")
-cat("The OR between embarking in C and embarking in Q ", odds.C  / odds.Q , "\n")
-cat("The OR between embarking in C and embarking in S ", odds.C  / odds.S , "\n")
+cat("The OR between embarking in Q and embarking in S ", odds.Q  / 
+      odds.S , "\n")
+cat("The OR between embarking in C and embarking in Q ", odds.C  / 
+      odds.Q , "\n")
+cat("The OR between embarking in C and embarking in S ", odds.C  / 
+      odds.S , "\n")
 ```
 
 Observamos que una persona que hubiera embarcado en el puerto Q, tenia 1.24 veces más probabilidades de sobrevivir que una persona que hubiera embarcado en el puerto S.
@@ -579,87 +585,92 @@ Una persona que hubiera embarcado en el puerto C, tenia 1.88 veces más probabil
 Finalmente, una persona que hubiera embarcado en el puerto C, tenia 2.34 veces más probabilidades de sobrevivir, que una persona que hubiera embarcado en el puerto S.
 
 
-#### 4.3.2 Analisis de la relación entre haber sobrevivido, o no, con las variables numéricas
+### 4.3.2 ¿La media de edad de las mujeres es igual o inferior a la de los hombres?
 
-Para estudiar si existe relación entre las variables numéricas **Age** y **Fare** con la variable **Survived**, se crea un modelo de regresión logística para cada una de las variables y poder evaluar si se trata de variables relevantes para predecir **Survived**.
+Nos preguntamos si la media de edad de las mujeres es igual o inferior a la de los hombres. Para responder a esta pregunta, realizaremos una prueva estadística por contraste de hipótesis.
 
 
-**Age:**
-```{r}
-model.age <- glm(Survived ~ Age, family = binomial(link=logit), data=titanic)
-summary (model.age)
+#### 4.3.2.1 Análisis visual
+
+Observemos las distribuciones y densidades de las edades en función del genero.
+
+```{r, out.width="50%"}
+p1 <- ggplot(titanic.women, aes(x = Age)) + 
+        geom_histogram(aes(y = ..density..), bins = 30,
+                       colour = 1, fill = "white") +
+        geom_density(lwd = 1, colour = 4,
+                     fill = 4, alpha = 0.25) +
+        scale_y_continuous(limit = c(0,0.12)) +
+        ggtitle("Distribución y densidad de la edad de las mujeres")
+
+p2 <- ggplot(titanic.men, aes(x = Age)) + 
+        geom_histogram(aes(y = ..density..), bins = 30,
+                       colour = 1, fill = "white") +
+        geom_density(lwd = 1, colour = 4,
+                     fill = 4, alpha = 0.25) +
+        scale_y_continuous(limit = c(0,0.12)) +
+        ggtitle("Distribución y densidad de la edad de los hombres") 
+
+grid.arrange(p1,p2,ncol = 2, nrow = 1)
 ```
 
-Si observamos el valor p de la variable **Age**, en la tabla de coeficientes, podemos ver que se trata de una variable significante al predecir **Survived**, para valores de significancia menores a 0.01.
+En ambas distribuciones observamos un pico pronunciado en los 30 años. La edad de las mujeres va de cero a sesenta y pocos años mientras que la de los hombres va de cero a ochenta. Las distribuciones son parecidas, pero no parecen muy normales pues no tienen forma simétrica de campana de Gauss. 
 
 
-**Fare:**
-
-```{r}
-model.fare <- glm(Survived ~ Fare, family = binomial(link=logit), data=titanic)
-summary (model.fare)
-```
-
-En el caso de **Fare**, en la tabla de coeficientes, observamos un valor p inferior a todos los valores comunes del nivel de significancia. Esto nos indica que la variable es significante a la hora de predecir **Survived**.
+#### 4.3.2.2 Normalidad y homoscedasticidad
 
 
+Realizaremos una prueba de normalidad Shapiro-Wilk para determinar si nos encontramos ante distribuciones normales.
 
-### 4.3.3 ¿La media de edad de las mujeres es igual o inferior a la de los hombres?
-
-Nos preguntamos si la media de edad de las mujeres es igual o inferior a la de los hombres.
-
-
-#### Análisis visual
-
-
-#TODO: Agrupar ambas densidades men/wmn en un mismo plot
-```{r}
-ggplot(data=titanic.women, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Women's age distribution") + ggtitle("Women's age")
-```
-
+**Women:**
 ```{r}
 shapiro.test(titanic.women$Age)
 ```
 
+**Men:**
 
 ```{r}
-ggplot(data=titanic.men, mapping= aes(x=Age)) + geom_density() + scale_x_continuous("Men's age distribution") + ggtitle("Men's age")
+shapiro.test(titanic.men$Age)
 ```
 
-#TODO: Comentar. ????Aunque las muestras no presentan distribuciones normales, aplicando el Teorema del Límite Central se puede concluir que las medias muestrales siguen una distribución normal
+Recordemos que para los tests de normalidad, la hipótesis nula indica normalidad, mientras que la alternativa indica que las distribuciones no son normales. En ambos casos, obtenemos valores p inferiores a los límites comunes de significancia, por ello, podemos confirmar que no nos encontramos ante distribuciones normales. 
 
-El test de contraste que se aplicará en este caso es el de un contrate unilateral de dos muestras independientes sobre la media con varianzas desconocidas. Para saber si las varianzas son diferentes, se debe realizar un test de homoscedasticidad.
+También es relevante mencionar que al disponer de una muestra poblacional suficientemente grande, según el Teorema del Límite Central, la distribución de las medias muéstrales seguirán una distribución normal y por ello podremos aplicar la posterior prueba por contraste de hipótesis.
+
+A continuación, evaluaremos la homoscedasticidad entre las edades de los hombres y las mujeres, para determinar si tienen varianzas iguales o diferentes. La hipótesis nula de este test, nos indica que las varianzas son iguales.
 
 ```{r}
 var.test(titanic.women$Age, titanic.men$Age)
 ```
 
-Como el p-valor es tan alto, no se puede rechazar la hipótesis nula de que las varianzas son diferentes, por lo tanto el test seguirá una distribución *t-student* con $n_1+n_2-2$ grados de libertad.
-
-#TODO: Plantear que hacemos un contraste de hipotesis.
-
-Pregunta: La media de edad de las mujeres es igual o inferior a la de los hombres?
-
-Hipótesis nula: $H_{0}: \mu_W=\mu_M$
-
-Hipótesis alternativa: $H_{1}: \mu_W<\mu_M$
+Como el p-valor es superior a los límites comunes de significancia, no se puede rechazar la hipótesis nula de que las varianzas son iguales.
 
 
-????Es un test paramétrico ya que los datos siguen una distribución normal.
+#### 4.3.2.3 Contraste de hipótesis
+
+Para realizar un estudio por contraste de hipótesis, primeramente plantearemos la pregunta responder, la hipótesis nula y la hipótesis alternativa.
+
+**Pregunta:** La media de edad de las mujeres es igual o inferior a la de los hombres?
+
+**Hipótesis nula:** $H_{0}: \mu_W=\mu_M$
+
+**Hipótesis alternativa:** $H_{1}: \mu_W<\mu_M$
+
+Recordemos que podemos considerar las distribuciones normales al aplicar el Teorema del límite Central, y que las varianzas de ambas muestras son iguales. Aplicaremos entonces un test de hipótesis paramétrico de dos muestras independientes sobre la media de edad. Se tratará de un test unilateral por la izquierda, es decir, para rechazar la hipótesis nula, deberemos observar una media de edad suficientemente inferior para las mujeres versus la media de edad de los hombres.
 
 
 ```{r}
 t.test(titanic.women$Age, titanic.men$Age, alternative = "l", var.equal = TRUE)
 ```
 
-Como el p-valor es menor que el nivel de significancia, se rechaza la hipótesis nula y se acepta que la media de edad de las mujeres fue menor que la de los hombres.
+Si consideramos un nivel de significancia de $\alpha=0.05$, podemos observar un valor p inferior a $\alpha$, por lo que podremos descartar la hipótesis nula que indica que ambas medias son iguales, y nos decantaremos por la hipótesis alternativa que indica que la media de edad de las mujeres es inferior a la de los hombres. Si nos fijamos con los resultados del test, nos indica que la media de la muestra de las mujeres es de 28.19 mientras que la de los hombres es de 30.49 años de edad.
 
 
 ### 4.4 Modelo de regresión logística
 
-A continuación, se irán añadiendo variables independientes al modelo de regresión logística para tratar de obtener el modelo que mejor prediga el dataset test.
+En este apartado, crearemos un modelo de regresión logística, y analizaremos como añadir variables independientes al modelo, nos afecta la precisión de los resultados (*accuracy*).
 
-En primer lugar, se divide el dataset en un dataset de train y otro de test para evaluar los modelos con una proporción 3 a 1.
+En primer lugar, se divide el dataset en un dataset de train y otro de test que se usará para evaluar los resultados de los modelos. Realizamos esta partición manteniendo una proporción 3 a 1.
 
 ```{r}
 
@@ -674,10 +685,11 @@ cat("The train set has", nrow(titanic_train), "rows\n\n")
 cat("The train set has", nrow(titanic_test), "rows")
 ```
 
-
 Para evaluar los modelos, se calcula su precisión a partir del dataset de test.
 
-En primer lugar, se calcula la precisión con las variables por separado.
+#### 4.4.1 Modelo base
+
+En primer lugar, se crea un modelo que utiliza una solo variable para predecir la variable dependiente **Survived**. Evaluaremos la precisión de los modelos. Este proceso nos ayudara a determinar las variables más relevantes para la predicción.
 
 ```{r}
 for (var in colnames(titanic_train)){
@@ -695,10 +707,11 @@ for (var in colnames(titanic_train)){
 }
 ```
 
-A continuación, se van añadiendo las variables con mejores resultados al modelo.
+Observamos que la variable con más peso, con la que obtenemos un accuracy mayor, es **Sex**, como ya estudiamos previamente, hay una gran diferencia en el porcentaje de mujeres que sobrevivieron, versus el de los hombres.
 
+Partiremos de la variable **Sex**, siendo la que ha obtenido mejores resultados de precisión, e iremos añadiendo variables al modelo con el objetivo de mejorar las predicciones.
 
-#### Sex y el resto de variables
+#### 4.4.2 Sex y el resto de variables
 
 ```{r}
 for (var in colnames(titanic_train)){
@@ -716,9 +729,9 @@ for (var in colnames(titanic_train)){
 }
 ```
 
-Las variables que mejores resultados muestran son **Parch** y **SibSp**. Como la variable **Parch** muestra un warning de correlación, se decide incluir la variable **SibSp** en el modelo.
+La variable que mejores resultados muestra es **SibSp**. Además, la variable **Parch** muestra un warning de correlación con la variable **Sex**, por lo que se decide incluir la variable **SibSp** en el modelo.
 
-#### Sex, SibSp y el resto de variables
+#### 4.4.3 Sex, SibSp y el resto de variables
 
 ```{r}
 for (var in colnames(titanic_train)){
@@ -731,17 +744,18 @@ for (var in colnames(titanic_train)){
     titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 
                                1, 0)
     accuracy <- sum(titanic_test$is_ok)/nrow(titanic_test)
-    cat("The accuracy of the model with Sex, SibSp and ", var, " is ", accuracy, "\n")
+    cat("The accuracy of the model with Sex, SibSp and ", var, " is ", accuracy,
+        "\n")
   }
 }
 ```
 
 Se hace el estudio sin las interacciones, ya que la gran cantidad de términos de correlación harían que los modelos generados no fuesen fiables.
 
-Se decide añadir ahora la variable **Pclass**.
+Se decide añadir ahora la variable **Pclass**, siendo la variable que mejores resultados nos otorga.
 
 
-#### Sex, SibSp, Pclass y el resto de variables.
+#### 4.4.4 Sex, SibSp, Pclass y el resto de variables.
 
 ```{r}
 for (var in colnames(titanic_train)){
@@ -761,10 +775,10 @@ for (var in colnames(titanic_train)){
 }
 ```
 
-La variable **Age** muestra los mejores resultados.
+Observamos que al añadir al modelo la variable **Age**, conseguimos un accuracy de 0.81, siendo esta la variable que mejores resultados aporta, la añadiremos al modelo.
 
 
-#### Sex, SibSp, Pclass, Age y el resto de variables.
+#### 4.4.5 Sex, SibSp, Pclass, Age y el resto de variables.
 
 ```{r}
 for (var in colnames(titanic_train)){
@@ -785,12 +799,14 @@ for (var in colnames(titanic_train)){
 }
 ```
 
-La precisión de los modelos es menor. Se decide que el modelo final sea el del apartado anterior.
+Observamos que llegado este punto, la precisión del modelo al añadir las variables restantes **Fare** y **Embarked** disminuye. Por esta razón determinamos que nuestro modelo final es el que incluye las variables, **Sex, SibSp, Pclass y Age**.
+
+#### 4.4.6 Modelo final
 
 
 ```{r}
-model.final <- glm(Survived ~ Sex * SibSp + Pclass * Age, family = binomial(link=logit), data=titanic_train)
-summary(model.final)
+model.final <- glm(Survived ~ Sex * SibSp + Pclass * Age, 
+                   family = binomial(link=logit), data=titanic_train)
 titanic_test$pred <- predict(model.final, titanic_test, type = "response")
 titanic_test$pred_d <- ifelse(titanic_test$pred < 0.5, 0, 1)
 titanic_test$is_ok <- ifelse(titanic_test$Survived == titanic_test$pred_d, 1, 0)
@@ -798,7 +814,7 @@ accuracy.final <- sum(titanic_test$is_ok)/nrow(titanic_test)
 cat("The accuracy of the final model is ", accuracy.final)
 ```
 
-Aunque haya varios términos no significativos, la precisión del modelo final es la más alta de entre todos los que se han estudiado.
+La precisión del modelo final es de 0.81, es decir, se han predicho correctamente el 81% de las observaciones del conjunto de datos test. 
 
 
 ## Ejercicio 5
@@ -806,10 +822,23 @@ Aunque haya varios términos no significativos, la precisión del modelo final e
 Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las
 conclusiones? ¿Los resultados permiten responder al problema?
 
-#TODO: 
-- Como afectan las variables a la probabilidad de sobrevivir o no. 
-- Comentar resultados relevantes del estudio para crear un modelo de regresión. 
+Con la realización de esta práctica, hemos querido responder a la pregunta, "¿Cuales fueron los factores de peso que influyeron en que los pasajeros del Titanic tuvieran mayor probabilidad de sobrevivir?". 
 
+Partimos del conjunto de datos del Titanic proporcionado por los recursos de la práctica, seleccionamos las variables que describían características de los pasajeros y realizamos un proceso de limpieza y tratamiento de valores vacíos y outliers.
+
+Seguidamente realizamos un estudio de normalidad y homogeniedad de la varianza para las variables numéricas del conjunto de datos **Age** y **Fare**, del cual pudimos determinar que ninguna de ellas sigue una distribución normal, ni las varianzas de **Age** y **Fare**, entre las dos categorías de la variable dependiente estudiada **Survived** son iguales. Es importante mencionar, que el conjunto de datos cuenta con más de 800 observaciones, 
+
+Ni age ni fare son normales ni homojeneas pero aplicamos TLC.
+
+Prueba Chi-cuadrado, todas las variables tienen relación con Survived.
+
+En vista del analisis visual y el Odds-ratio, aprentamente las variables con mayor peso son Sex y Pclass. También observamos variabilidad entre las categorías de las demás variables en cuanto a la probabilidad de sobrevivir, peró aparentemente no son tan significativas.
+
+Nos preguntamos si ¿La media de edad de las mujeres es igual o inferior a la de los hombres? Para responder a esta pregunta realizamos un contraste de hipótesis, y determinamos que con un nivel de significancia del 0.05%, podemos confirarmar que la media de edad de las mujeres es inferior a la de los hombres.
+
+En cuanto a la elaboración de un modelo de regresión logística, se destacan los siguientes resultados. En primer lugar, la variable más determinante a la hora de discernir entre si un pasajero sobrevivirá o no ha sido la variable **Sex**, un resultado esperado en vista de los análisis previos. Sin embargo, la segunda variable a incluir en el modelo ha sido la variable **SibSp**, lo cual era difícilmente predecible. Se han ido añadiendo nuevas variables hasta alcanzar un modelo con una precisión del 81%. En este modelo final estaban incluidas las variables **Sex**, **SibSp**, **Pclass** y **Age**, por lo que se considera que estas cuatro variables son las más determinantes a la hora de clasificar los registros.
+
+Se destaca que gran parte de las variables se han añadido sin los términos de interacción ya que el escueto tamaño del dataset no permitía la creación con tantos términos de interacción.
 
 ## Referencias
 
