@@ -23,3 +23,5 @@ src/TitanicDataTreatment.Rmd, contiene una Notebook donde se presenta el proyect
 src/TitanicDataTreatment.html, contiene el export del Notebook en HTML.
 
 src/TitanicDataTreatment.pdf, contiene el export del Nobebook en PDF.
+
+src/TitanicDataTreatment.R, contiene el export del codigo R usando durante el desarrollo del Notebook.
